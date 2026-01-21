@@ -8,6 +8,7 @@ from os import path
 import shutil
 from tempfile import mkdtemp
 from typer import run
+from time import time
 
 __VERSION__ = "0.1.0"
 
@@ -101,16 +102,18 @@ def main(
     )
     with Live(Text(""), refresh_per_second=16) as live:
         live.update("-  Waiting for FFMpeg startup...")
+        start_time = time()
         for chunk in task.run():
             # Update the display content
             live.update(f"-  {chunk}")
+        end_time = time()
         if task.return_code != 0:
             print("[red]ˣ  Failed to convert the source file to VP9 (IVF) encoding.[/red]")
             print("[red]   Please check the source file and try again.[/red]")
             print("[red]   Or specify the path to the executable using the --ffmpeg-path option.[/red]")
             exit(1)
         else:
-            live.update("-  [green]Finished[/green]")
+            live.update(f"-  [green]Finished in {end_time - start_time:.2f} seconds[/green]")
     with Live(Text(""), refresh_per_second=16) as live:
         live.update("[bold][yellow](5)[/yellow][/bold] Converting to USM (.dat)... Pending")
         video = Vp9(path.join(temp_folder, "source.ivf"), ffprobe_path=ffprobe_path) # pyright: ignore[reportAbstractUsage]
