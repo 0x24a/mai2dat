@@ -114,9 +114,9 @@ def get_pages(info: bytearray, encoding: str = "UTF-8") -> List[UsmPage]:
                 element_type = shared_array[0] & 0x1F
 
             try:
-                element_occurrence: Union[
-                    ElementOccurrence, int
-                ] = ElementOccurrence.from_int(shared_array[0] >> 5)
+                element_occurrence: Union[ElementOccurrence, int] = (
+                    ElementOccurrence.from_int(shared_array[0] >> 5)
+                )
             except ValueError:
                 element_occurrence = shared_array[0] >> 5
 

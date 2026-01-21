@@ -117,6 +117,7 @@ class Vp9(UsmVideo):
         self._channel_number = channel_number
         self._metadata_pages = None
 
+
 class H264(UsmVideo):
     def __init__(
         self,
@@ -136,7 +137,7 @@ class H264(UsmVideo):
 
         if len(info.get("streams")) == 0:
             raise ValueError("File has no videos streams.")
-        if info.get("format").get("format_name") != "h264" :
+        if info.get("format").get("format_name") != "h264":
             raise ValueError("File is not a raw H.264 video stream.")
         if info.get("streams")[0].get("codec_name") != "h264":
             raise ValueError("File is not a valid H.264 stream.")

@@ -96,9 +96,11 @@ class UsmChunk:
         logging.debug(
             "Chunk info",
             extra={
-                "type": chunk_type
-                if isinstance(chunk_type, ChunkType)
-                else bytes_to_hex(chunk_type),
+                "type": (
+                    chunk_type
+                    if isinstance(chunk_type, ChunkType)
+                    else bytes_to_hex(chunk_type)
+                ),
                 "chunksize_after_header": chunksize,
                 "r08": chunk[0x8],
                 "payload_offset": payload_offset,

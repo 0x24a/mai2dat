@@ -332,9 +332,7 @@ def encrypt_usm():
         type=existing_path,
         help="Path to usm file or directory of usm files.",
     )
-    parser.add_argument(
-        "key", type=key, help="Encryption key."
-    )
+    parser.add_argument("key", type=key, help="Encryption key.")
     parser.add_argument(
         "-e",
         "--encoding",
@@ -351,7 +349,11 @@ def encrypt_usm():
     )
     args = parser.parse_args()
 
-    outdir = dir_or_parent_dir(args.input) if args.output is None else pathlib.Path(args.output)
+    outdir = (
+        dir_or_parent_dir(args.input)
+        if args.output is None
+        else pathlib.Path(args.output)
+    )
     usmfiles = find_usm(args.input)
 
     for filepath in usmfiles:
@@ -363,7 +365,12 @@ def encrypt_usm():
                 out.write(packet)
 
 
-OP_DICT = {"extractusm": extract_usm, "createusm": create_usm, "probeusm": probe_usm, "encryptusm": encrypt_usm}
+OP_DICT = {
+    "extractusm": extract_usm,
+    "createusm": create_usm,
+    "probeusm": probe_usm,
+    "encryptusm": encrypt_usm,
+}
 OP_LIST = list(OP_DICT.keys())
 
 
@@ -453,6 +460,7 @@ def dir_path(path) -> str:
         raise FileExistsError(path)
 
     return path.rstrip("/\\")
+
 
 def dir_or_parent_dir(path) -> pathlib.Path:
     path = pathlib.Path(path)

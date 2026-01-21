@@ -33,19 +33,18 @@ class GenericAudio(UsmAudio):
 
 
 class HCA(UsmAudio):
-    def __init__(
-            self,
-            filepath: str,
-            channel_number: int = 1,
-            format_version: int = 0
-    ):
+    def __init__(self, filepath: str, channel_number: int = 1, format_version: int = 0):
 
         metadata = self._get_metadata(filepath)
         # have no idea how this is done, pure guess based on minbuf guess elsewhere
         minbuf = math.ceil(metadata["CompHeader"]["FrameSize"][0] * 54.4140625)
         # Estimated comparing video fps to audio fps, avg bitrate
         # Framesize bit is sort of extrapolated from that
-        avbps = round(0.0399607 * metadata["FormatHeader"]["FrameCount"][0] * metadata["CompHeader"]["FrameSize"][0])
+        avbps = round(
+            0.0399607
+            * metadata["FormatHeader"]["FrameCount"][0]
+            * metadata["CompHeader"]["FrameSize"][0]
+        )
 
         self._crid_page = create_audio_crid_page(
             Path(filepath).name,
@@ -53,7 +52,7 @@ class HCA(UsmAudio):
             format_version,
             metadata["FormatHeader"]["ChannelCount"][0],
             minbuf,
-            avbps
+            avbps,
         )
 
         self._header_page = create_audio_header_page(
@@ -65,9 +64,7 @@ class HCA(UsmAudio):
             27860,  # I have no idea
         )
 
-        def packet_gen(
-            path: str
-        ) -> Generator[typing.Tuple[bytes, bool], None, None]:
+        def packet_gen(path: str) -> Generator[typing.Tuple[bytes, bool], None, None]:
             video = open(path, "rb")
             yield video.read(96)
             for i in range(metadata["FormatHeader"]["FrameCount"][0]):
@@ -106,13 +103,14 @@ class HCA(UsmAudio):
 class ClassStruct:
     FORMAT: OrderedDict = OrderedDict()
     CONVERT_TYPES = {}
+
     @classmethod
     def unpack(cls, string: bytes) -> dict:
         values = {}
         start = 0
         for key, value in cls.FORMAT.items():
             size = struct.calcsize(value)
-            values[key] = struct.unpack(value, string[start: start+size])
+            values[key] = struct.unpack(value, string[start : start + size])
             start += size
         for key, value in cls.CONVERT_TYPES.items():
             data = bytearray(b"".join(values[key]))
@@ -138,46 +136,49 @@ class ClassStruct:
         return sum([struct.calcsize(value) for value in cls.FORMAT.values()])
 
 
-
 class HCAHeader(ClassStruct):
-    ID = b'HCA\x00'
-    FORMAT = OrderedDict((
-        ("Signature", ">cccc"),
-        ("VersionMajor", ">B"),
-        ("VersionMinor", ">B"),
-        ("HeaderSize", ">H"),
-    ))
+    ID = b"HCA\x00"
+    FORMAT = OrderedDict(
+        (
+            ("Signature", ">cccc"),
+            ("VersionMajor", ">B"),
+            ("VersionMinor", ">B"),
+            ("HeaderSize", ">H"),
+        )
+    )
 
 
 # Only unpacks, does not pack correctly
 class FormatHeader(ClassStruct):
-    ID = b'fmt\x00'
-    FORMAT = OrderedDict((
-        ("Signature", ">cccc"),
-        ("ChannelCount", ">c"), # 8 bit integer
-        ("SampleRate", ">ccc"), # 24 bit integer
-        ("FrameCount", ">I"),
-        ("InsertedSamples", ">H"),
-        ("AppendedSamples", ">H"),
-    ))
-    CONVERT_TYPES = {
-        "ChannelCount": ">I",
-        "SampleRate": ">I"
-    }
+    ID = b"fmt\x00"
+    FORMAT = OrderedDict(
+        (
+            ("Signature", ">cccc"),
+            ("ChannelCount", ">c"),  # 8 bit integer
+            ("SampleRate", ">ccc"),  # 24 bit integer
+            ("FrameCount", ">I"),
+            ("InsertedSamples", ">H"),
+            ("AppendedSamples", ">H"),
+        )
+    )
+    CONVERT_TYPES = {"ChannelCount": ">I", "SampleRate": ">I"}
+
 
 class CompHeader(ClassStruct):
     ID = b"comp"
-    FORMAT = OrderedDict((
-        ("Signature", ">cccc"),
-        ("FrameSize", ">H"),
-        ("MinResolution", ">b"),
-        ("MaxResolution", ">b"),
-        ("TrackCount", ">b"),
-        ("ChannelConfig", ">b"),
-        ("TotalBandCount", ">B"),
-        ("BaseBandCount", ">B"),
-        ("StereoBandCount", ">B"),
-        ("BandsPerHfrGroup", ">B"),
-        ("reserved1", ">b"),
-        ("reserved2", ">b"),
-    ))
+    FORMAT = OrderedDict(
+        (
+            ("Signature", ">cccc"),
+            ("FrameSize", ">H"),
+            ("MinResolution", ">b"),
+            ("MaxResolution", ">b"),
+            ("TrackCount", ">b"),
+            ("ChannelConfig", ">b"),
+            ("TotalBandCount", ">B"),
+            ("BaseBandCount", ">B"),
+            ("StereoBandCount", ">B"),
+            ("BandsPerHfrGroup", ">B"),
+            ("reserved1", ">b"),
+            ("reserved2", ">b"),
+        )
+    )

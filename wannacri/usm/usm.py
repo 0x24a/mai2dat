@@ -96,10 +96,15 @@ class Usm:
     @property
     def filename(self) -> str:
         if self._usm_crid is not None:
-            return self._usm_crid.get("filename").val.split("/")[-1] #pyright: ignore[reportOptionalMemberAccess]
+            return self._usm_crid.get("filename").val.split("/")[
+                -1
+            ]  # pyright: ignore[reportOptionalMemberAccess]
 
         return (
-            self.videos[0].crid_page.get("filename").val.split("/")[-1].split(".")[0] #pyright: ignore[reportOptionalMemberAccess]
+            self.videos[0]
+            .crid_page.get("filename")
+            .val.split("/")[-1]  # pyright: ignore[reportOptionalMemberAccess]
+            .split(".")[0]
             + ".usm"
         )
 
@@ -442,16 +447,22 @@ def _chunk_helper(default_dict_ch: Dict[int, UsmChannel], chunk: UsmChunk, offse
         logging.debug(
             f"{chunk.chunk_type} section end",
             extra={
-                "payload": bytes_to_hex(chunk.payload)
-                if isinstance(chunk.payload, bytes)
-                else chunk.payload,
+                "payload": (
+                    bytes_to_hex(chunk.payload)
+                    if isinstance(chunk.payload, bytes)
+                    else chunk.payload
+                ),
                 "offset": offset,
             },
         )
     elif chunk.payload_type == PayloadType.HEADER:
-        default_dict_ch[chunk.channel_number].header = chunk.payload[0] #pyright: ignore[reportAttributeAccessIssue]
+        default_dict_ch[chunk.channel_number].header = chunk.payload[
+            0
+        ]  # pyright: ignore[reportAttributeAccessIssue]
     elif chunk.payload_type == PayloadType.METADATA:
-        default_dict_ch[chunk.channel_number].metadata = chunk.payload #pyright: ignore[reportAttributeAccessIssue]
+        default_dict_ch[chunk.channel_number].metadata = (
+            chunk.payload
+        )  # pyright: ignore[reportAttributeAccessIssue]
     else:
         raise ValueError(f"Unknown payload type: {chunk.payload_type}")
 
