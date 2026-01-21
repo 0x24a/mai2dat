@@ -96,7 +96,7 @@ def main(
         ffmpeg_path,
         "-i", path.join(temp_folder, path.basename(source)),
         "-c:v", "libvpx-vp9",
-        "-vf", "scale=if(gt(iw\\,ih)\\,1080\\,-1):if(gt(ih\\,iw)\\,1080\\,-1),crop=min(iw\\,1080):min(ih\\,1080)",
+        "-vf", "crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080",
         path.join(temp_folder, "source.ivf")
     )
     with Live(Text(""), refresh_per_second=16) as live:
