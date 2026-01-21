@@ -3,6 +3,7 @@ from subprocess import STDOUT, Popen, PIPE
 from rich import print
 from rich.live import Live
 from rich.text import Text
+from rich.progress import Progress
 from wannacri.wannacri import Vp9, Usm, OpMode
 from os import path
 import shutil
@@ -10,7 +11,7 @@ from tempfile import mkdtemp
 from typer import run
 from time import time
 
-__VERSION__ = "1.0.0"
+__VERSION__ = "1.0.1"
 
 def check_ffmpeg(ffmpeg_path: str = "ffmpeg") -> bool:
     try:
@@ -25,6 +26,13 @@ def check_ffprobe(ffprobe_path: str = "ffprobe") -> bool:
         return True
     except Exception as _:
         return False
+
+def get_total_frames(video_path: str, ffprobe_path: str = "ffprobe") -> int:
+    try:
+        result = Popen([ffprobe_path, "-v", "error", "-select_streams", "v:0", "-count_packets", "-show_entries", "stream=nb_read_packets", "-of", "default=noprint_wrappers=1:nokey=1", video_path], stdout=PIPE, stderr=PIPE).communicate()[0].decode("utf-8").strip()
+        return int(result) if result else -1
+    except Exception as _:
+        return -1
 
 class FFMpegTask:
     def __init__(self, ffmpeg_path: str = "ffmpeg", *args: str):
@@ -92,32 +100,50 @@ def main(
     temp_folder = mkdtemp()
     shutil.copy(source, path.join(temp_folder, path.basename(source)))
     print("[green]OK[/green]")
-    print("[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding...")
     if path.exists(destination):
         print("[red]ˣ  Destination file already exists.[/red]")
         print("[red]   Please remove it or change the destination path.[/red]")
         exit(1)
-    task = FFMpegTask(
+    ffmpeg_task = FFMpegTask(
         ffmpeg_path,
         "-i", path.join(temp_folder, path.basename(source)),
         "-c:v", "libvpx-vp9",
         "-vf", "crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080",
         path.join(temp_folder, "source.ivf")
     )
-    with Live(Text(""), refresh_per_second=16) as live:
-        live.update("-  Waiting for FFMpeg startup...")
-        start_time = time()
-        for chunk in task.run():
-            # Update the display content
-            live.update(f"-  {chunk}")
-        end_time = time()
-        if task.return_code != 0:
+    total_frames = get_total_frames(path.join(temp_folder, path.basename(source)), ffprobe_path=ffprobe_path)
+    if total_frames == -1:
+        print("[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding...")
+        with Live(Text(""), refresh_per_second=16) as live:
+            live.update("-  Waiting for FFMpeg startup...")
+            start_time = time()
+            for chunk in ffmpeg_task.run():
+                # Update the display content
+                live.update(f"-  {chunk}")
+            end_time = time()
+            if ffmpeg_task.return_code != 0:
+                print("[red]ˣ  Failed to convert the source file to VP9 (IVF) encoding.[/red]")
+                print("[red]   Please check the source file and try again.[/red]")
+                print("[red]   Or specify the path to the executable using the --ffmpeg-path option.[/red]")
+                exit(1)
+            else:
+                live.update(f"-  [green]Finished in {end_time - start_time:.2f} seconds[/green]")
+    else:
+        with Progress(transient=True) as progress:
+            task = progress.add_task("[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding: ", total=total_frames)
+            for chunk in ffmpeg_task.run():
+                try:
+                    current_frame = int(chunk.split("frame=")[1].split("fps=")[0].strip())
+                except Exception as _:
+                    continue
+                progress.update(task_id=task, completed=current_frame)
+        if ffmpeg_task.return_code != 0:
             print("[red]ˣ  Failed to convert the source file to VP9 (IVF) encoding.[/red]")
             print("[red]   Please check the source file and try again.[/red]")
             print("[red]   Or specify the path to the executable using the --ffmpeg-path option.[/red]")
             exit(1)
-        else:
-            live.update(f"-  [green]Finished in {end_time - start_time:.2f} seconds[/green]")
+        print("[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding... [green]OK[/green]")
+            
     with Live(Text(""), refresh_per_second=16) as live:
         live.update("[bold][yellow](5/7)[/yellow][/bold] Converting to USM (.dat)... Pending")
         video = Vp9(path.join(temp_folder, "source.ivf"), ffprobe_path=ffprobe_path) # pyright: ignore[reportAbstractUsage]
@@ -139,7 +165,7 @@ def main(
     except Exception as _:
         print("[orange]ˣ  Failed to clean up temporary files.[/orange]")
         print("[orange]   But it should be okay since your operating system should handle it.[/orange]")
-    print(f"[green]Successfully converted {source} to {destination}.[/green]")
+    print(f"\n[green]Successfully converted {source} to {destination}.[/green]")
 
 if __name__ == "__main__":
     run(main)
