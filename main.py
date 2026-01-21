@@ -129,8 +129,12 @@ def main(
     shutil.copy(path.join(temp_folder, "target.usm"), destination)
     print("[green]OK[/green]")
     print("[yellow](7/7)[/yellow] Cleaning up... ", end="")
-    shutil.rmtree(temp_folder)
-    print("[green]OK[/green]")
+    try:
+        shutil.rmtree(temp_folder)
+        print("[green]OK[/green]")
+    except Exception as _:
+        print("[orange]ˣ  Failed to clean up temporary files.[/orange]")
+        print("[orange]   But it should be okay since your operating system should handle it.[/orange]")
     print(f"[green]Successfully converted {source} to {destination}.[/green]")
 
 if __name__ == "__main__":
