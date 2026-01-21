@@ -93,6 +93,10 @@ def main(
     shutil.copy(source, path.join(temp_folder, path.basename(source)))
     print("[green]OK[/green]")
     print("[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding...")
+    if path.exists(destination):
+        print("[red]ˣ  Destination file already exists.[/red]")
+        print("[red]   Please remove it or change the destination path.[/red]")
+        exit(1)
     task = FFMpegTask(
         ffmpeg_path,
         "-i", path.join(temp_folder, path.basename(source)),
