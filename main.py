@@ -11,7 +11,7 @@ from tempfile import mkdtemp
 from typer import run
 from time import time
 
-__VERSION__ = "1.0.1"
+__VERSION__ = "1.0.2"
 
 def check_ffmpeg(ffmpeg_path: str = "ffmpeg") -> bool:
     try:
@@ -130,7 +130,7 @@ def main(
                 live.update(f"-  [green]Finished in {end_time - start_time:.2f} seconds[/green]")
     else:
         with Progress(transient=True) as progress:
-            task = progress.add_task("[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding: ", total=total_frames)
+            task = progress.add_task("[bold][yellow](4/7)[/yellow][/bold] Converting the source file to VP9 (IVF) encoding: ", total=total_frames)
             for chunk in ffmpeg_task.run():
                 try:
                     current_frame = int(chunk.split("frame=")[1].split("fps=")[0].strip())
