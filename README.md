@@ -2,7 +2,7 @@
 Convert any video to CRIWARE's video file format.
 
 ## Installation
-mai2dat uses [uv](https://docs.astral.sh/uv/) as the package manager. If you don't, please run the following command:  
+mai2dat uses [uv](https://docs.astral.sh/uv/) as the package manager. If you don't have it, please run the following command:  
 Windows: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`  
 Linux & macOS: `curl -LsSf https://astral.sh/uv/install.sh | sh`  
   
