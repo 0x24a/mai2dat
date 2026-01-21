@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional
 from subprocess import STDOUT, Popen, PIPE
 from rich import print
 from rich.live import Live
@@ -61,7 +61,7 @@ class FFMpegTask:
 
 def main(
     source: str,
-    destination: str,
+    destination: Optional[str] = None,
     ffmpeg_path: str = "ffmpeg",
     ffprobe_path: str = "ffprobe",
     key: str = "0x7F4551499DF55E68", # Hello miamia xd
@@ -73,6 +73,8 @@ def main(
     if not path.exists(source):
         print("[red]ˣ  Source file not found.[/red]")
         exit(1)
+    if not destination:
+        destination = path.splitext(source)[0] + ".dat"
     try:
         int(key, 16)
     except ValueError:
