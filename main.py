@@ -131,7 +131,7 @@ def main(
     print("[yellow](7/7)[/yellow] Cleaning up... ", end="")
     shutil.rmtree(temp_folder)
     print("[green]OK[/green]")
-    print(f"[green]Successfully converted {source} to {destination} with key {key} and USM version {usm_version}.[/green]")
+    print(f"[green]Successfully converted {source} to {destination}.[/green]")
 
 if __name__ == "__main__":
     run(main)
