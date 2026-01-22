@@ -26,4 +26,5 @@ Optional flags:
 - `--key`: Specify the USM encryption key, in hexadecimal format. (Default: 0x7F4551499DF55E68)
 - `--usm-version`: Specify the USM version to use. (Default: 16777984)
   
+Or if you are on Windows, you can just drag the video file you want to convert onto "run.bat", and mai2dat will generate a "(original file name).dat" file in the same directory.  
 Made with ❤️ by 0x24a
