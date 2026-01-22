@@ -94,13 +94,16 @@ def main(
     ffprobe_path: str = "ffprobe",
     key: str = "0x7F4551499DF55E68",  # Hello miamia xd
     usm_version: int = 16777984,  # miamia xd again
-    behavior: Literal['pad', 'crop'] = 'pad',
+    behavior: Literal['pad', 'crop', 'pack-only'] = 'pad',
 ):
     print(f"[bold][cyan]mai2dat {__VERSION__}[/cyan][/bold]")
     print("[cyan]Convert any video to CRIWARE's video file format.[/cyan]")
     print()
     if not path.exists(source):
         print("[red]ˣ  Source file not found.[/red]")
+        exit(1)
+    if behavior == "pack-only" and not source.endswith(".ivf"):
+        print("[red]ˣ  To use the pack-only behavior, the source file must be an IVF (VP9) file.[/red]")
         exit(1)
     if not destination:
         destination = path.splitext(source)[0] + ".dat"
@@ -143,30 +146,63 @@ def main(
         print("[red]ˣ  Destination file already exists.[/red]")
         print("[red]   Please remove it or change the destination path.[/red]")
         exit(1)
-    ffmpeg_task = FFMpegTask(
-        ffmpeg_path,
-        "-i",
-        path.join(temp_folder, path.basename(source)),
-        "-c:v",
-        "libvpx-vp9",
-        "-vf",
-        "crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080" if behavior == 'crop' else "pad=max(iw\\,ih):max(iw\\,ih):(ow-iw)/2:(oh-ih)/2,scale=720:720",
-        path.join(temp_folder, "source.ivf"),
-    )
-    total_frames = get_total_frames(
-        path.join(temp_folder, path.basename(source)), ffprobe_path=ffprobe_path
-    )
-    if total_frames == -1:
+    if behavior == "pack-only":
         print(
-            "[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding..."
+            "[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding... [green](skipped)[/green]"
         )
-        with Live(Text(""), refresh_per_second=16) as live:
-            live.update("-  Waiting for FFMpeg startup...")
-            start_time = time()
-            for chunk in ffmpeg_task.run():
-                # Update the display content
-                live.update(f"-  {chunk}")
-            end_time = time()
+        shutil.copy(path.join(temp_folder, path.basename(source)), path.join(temp_folder, "source.ivf"))
+    else:
+        ffmpeg_task = FFMpegTask(
+            ffmpeg_path,
+            "-i",
+            path.join(temp_folder, path.basename(source)),
+            "-c:v",
+            "libvpx-vp9",
+            "-vf",
+            "crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080" if behavior == 'crop' else "pad=max(iw\\,ih):max(iw\\,ih):(ow-iw)/2:(oh-ih)/2,scale=720:720",
+            path.join(temp_folder, "source.ivf"),
+        )
+        total_frames = get_total_frames(
+            path.join(temp_folder, path.basename(source)), ffprobe_path=ffprobe_path
+        )
+        if total_frames == -1:
+            print(
+                "[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding..."
+            )
+            with Live(Text(""), refresh_per_second=16) as live:
+                live.update("-  Waiting for FFMpeg startup...")
+                start_time = time()
+                for chunk in ffmpeg_task.run():
+                    # Update the display content
+                    live.update(f"-  {chunk}")
+                end_time = time()
+                if ffmpeg_task.return_code != 0:
+                    print(
+                        "[red]ˣ  Failed to convert the source file to VP9 (IVF) encoding.[/red]"
+                    )
+                    print("[red]   Please check the source file and try again.[/red]")
+                    print(
+                        "[red]   Or specify the path to the executable using the --ffmpeg-path option.[/red]"
+                    )
+                    exit(1)
+                else:
+                    live.update(
+                        f"-  [green]Finished in {end_time - start_time:.2f} seconds[/green]"
+                    )
+        else:
+            with Progress(transient=True) as progress:
+                task = progress.add_task(
+                    "[bold][yellow](4/7)[/yellow][/bold] Converting the source file to VP9 (IVF) encoding: ",
+                    total=total_frames,
+                )
+                for chunk in ffmpeg_task.run():
+                    try:
+                        current_frame = int(
+                            chunk.split("frame=")[1].split("fps=")[0].strip()
+                        )
+                    except Exception as _:
+                        continue
+                    progress.update(task_id=task, completed=current_frame)
             if ffmpeg_task.return_code != 0:
                 print(
                     "[red]ˣ  Failed to convert the source file to VP9 (IVF) encoding.[/red]"
@@ -176,36 +212,9 @@ def main(
                     "[red]   Or specify the path to the executable using the --ffmpeg-path option.[/red]"
                 )
                 exit(1)
-            else:
-                live.update(
-                    f"-  [green]Finished in {end_time - start_time:.2f} seconds[/green]"
-                )
-    else:
-        with Progress(transient=True) as progress:
-            task = progress.add_task(
-                "[bold][yellow](4/7)[/yellow][/bold] Converting the source file to VP9 (IVF) encoding: ",
-                total=total_frames,
-            )
-            for chunk in ffmpeg_task.run():
-                try:
-                    current_frame = int(
-                        chunk.split("frame=")[1].split("fps=")[0].strip()
-                    )
-                except Exception as _:
-                    continue
-                progress.update(task_id=task, completed=current_frame)
-        if ffmpeg_task.return_code != 0:
             print(
-                "[red]ˣ  Failed to convert the source file to VP9 (IVF) encoding.[/red]"
+                "[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding... [green]OK[/green]"
             )
-            print("[red]   Please check the source file and try again.[/red]")
-            print(
-                "[red]   Or specify the path to the executable using the --ffmpeg-path option.[/red]"
-            )
-            exit(1)
-        print(
-            "[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding... [green]OK[/green]"
-        )
 
     with Live(Text(""), refresh_per_second=16) as live:
         live.update(
