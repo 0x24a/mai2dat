@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, Literal, Optional
 from subprocess import STDOUT, Popen, PIPE
 from rich import print
 from rich.live import Live
@@ -8,7 +8,7 @@ from wannacri.wannacri import Vp9, Usm, OpMode
 from os import path
 import shutil
 from tempfile import mkdtemp
-from typer import run
+from typer import Argument, run
 from time import time
 
 __VERSION__ = "1.0.2"
@@ -89,11 +89,12 @@ class FFMpegTask:
 
 def main(
     source: str,
-    destination: Optional[str] = None,
+    destination: Optional[str] = Argument(None),
     ffmpeg_path: str = "ffmpeg",
     ffprobe_path: str = "ffprobe",
     key: str = "0x7F4551499DF55E68",  # Hello miamia xd
     usm_version: int = 16777984,  # miamia xd again
+    behavior: Literal['pad', 'crop'] = 'pad',
 ):
     print(f"[bold][cyan]mai2dat {__VERSION__}[/cyan][/bold]")
     print("[cyan]Convert any video to CRIWARE's video file format.[/cyan]")
@@ -149,7 +150,7 @@ def main(
         "-c:v",
         "libvpx-vp9",
         "-vf",
-        "crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080",
+        "crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080" if behavior == 'crop' else "pad=max(iw\\,ih):max(iw\\,ih):(ow-iw)/2:(oh-ih)/2,scale=720:720",
         path.join(temp_folder, "source.ivf"),
     )
     total_frames = get_total_frames(
