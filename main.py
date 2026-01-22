@@ -233,7 +233,7 @@ def main(
                 chunk_n += 1
                 f.write(chunk)
         live.update(
-            "[bold][yellow](5/7)[/yellow][/bold] Converting to USM (.dat)... [green]Done[/green]"
+            "[bold][yellow](5/7)[/yellow][/bold] Converting to USM (.dat)... [green]OK[/green]"
         )
     print("[yellow](6/7)[/yellow] Copying back the result... ", end="")
     shutil.copy(path.join(temp_folder, "target.usm"), destination)
