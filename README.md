@@ -25,11 +25,11 @@ Optional flags:
 - `--ffprobe-path`: Specify the path to ffprobe executable. (Default: ffprobe)
 - `--key`: Specify the USM encryption key, in hexadecimal format. (Default: 0x7F4551499DF55E68)
 - `--usm-version`: Specify the USM version to use. (Default: 16777984)
-- `--behavior`: Video crop behavior. 
- - `pad`: Pad to a square aspect ratio.
- - `crop`: Crop to a square aspect ratio, to the middle.
- - `original`: Keep the original aspect ratio.
- - `pack-only`: Pack the video into a .dat file without converting it. Requires the input file to be a .ivf(VP9) file.
+- `--behavior`: Video crop behavior.
+    - `pad`: Pad to a square aspect ratio.
+    - `crop`: Crop to a square aspect ratio, to the middle.
+    - `original`: Keep the original aspect ratio.
+    - `pack-only`: Pack the video into a .dat file without converting it. Requires the input file to be a .ivf(VP9) file.
   
 Or if you are on Windows, you can just drag the video file you want to convert onto "run.bat", and mai2dat will generate a "(original file name).dat" file in the same directory.  
 Made with ❤️ by 0x24a
