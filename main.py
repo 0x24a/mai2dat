@@ -94,7 +94,7 @@ def main(
     ffprobe_path: str = "ffprobe",
     key: str = "0x7F4551499DF55E68",  # Hello miamia xd
     usm_version: int = 16777984,  # miamia xd again
-    behavior: Literal['pad', 'crop', 'pack-only', 'original'] = 'pad',
+    behavior: Literal["pad", "crop", "pack-only", "original"] = "pad",
 ):
     print(f"[bold][cyan]mai2dat {__VERSION__}[/cyan][/bold]")
     print("[cyan]Convert any video to CRIWARE's video file format.[/cyan]")
@@ -103,7 +103,9 @@ def main(
         print("[red]ˣ  Source file not found.[/red]")
         exit(1)
     if behavior == "pack-only" and not source.endswith(".ivf"):
-        print("[red]ˣ  To use the pack-only behavior, the source file must be an IVF (VP9) file.[/red]")
+        print(
+            "[red]ˣ  To use the pack-only behavior, the source file must be an IVF (VP9) file.[/red]"
+        )
         exit(1)
     if not destination:
         destination = path.splitext(source)[0] + ".dat"
@@ -150,7 +152,10 @@ def main(
         print(
             "[yellow](4/7)[/yellow] Converting the source file to VP9 (IVF) encoding... [green](skipped)[/green]"
         )
-        shutil.copy(path.join(temp_folder, path.basename(source)), path.join(temp_folder, "source.ivf"))
+        shutil.copy(
+            path.join(temp_folder, path.basename(source)),
+            path.join(temp_folder, "source.ivf"),
+        )
     else:
         ffmpeg_task = FFMpegTask(
             ffmpeg_path,
@@ -159,7 +164,15 @@ def main(
             "-c:v",
             "libvpx-vp9",
             "-vf" if behavior != "original" else "",
-            ("crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080" if behavior == 'crop' else "pad=max(iw\\,ih):max(iw\\,ih):(ow-iw)/2:(oh-ih)/2,scale=720:720") if behavior != "original" else "",
+            (
+                (
+                    "crop=min(iw\\,ih):min(iw\\,ih),scale=1080:1080"
+                    if behavior == "crop"
+                    else "pad=max(iw\\,ih):max(iw\\,ih):(ow-iw)/2:(oh-ih)/2,scale=720:720"
+                )
+                if behavior != "original"
+                else ""
+            ),
             path.join(temp_folder, "source.ivf"),
         )
         total_frames = get_total_frames(
